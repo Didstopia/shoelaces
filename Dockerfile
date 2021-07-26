@@ -30,6 +30,6 @@ VOLUME [ "/data", "/web" ]
 # CMD []
 
 ENTRYPOINT ["/entrypoint"]
-CMD ["/shoelaces", "-data-dir", "/data", "-static-dir", "/web"]
+CMD ["/shoelaces", "-bind-addr", "localhost:8081", "-data-dir", "/data/", "-static-dir", "/web/", "-template-extension", ".slc", "-mappings-file", "mappings.yaml", "-debug", "true"]
 
 # ENTRYPOINT ["/entrypoint", "/shoelaces", "-data-dir", "/data", "-static-dir", "/web"]
