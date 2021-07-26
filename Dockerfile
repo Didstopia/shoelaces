@@ -22,6 +22,8 @@ COPY docker_entrypoint.sh /entrypoint
 RUN chmod +x /entrypoint
 
 #ENV BIND_ADDR=0.0.0.0:8081
+ENV PUID 1000
+ENV PGID 100
 EXPOSE 80
 
 VOLUME [ "/data", "/web" ]

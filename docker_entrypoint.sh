@@ -20,4 +20,6 @@ if [ ! -d "/web" ]; then
   ls -lah /web
 fi
 
+chown -R ${PUID}:${PGID} /data /web
+
 exec "$@"
