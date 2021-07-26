@@ -21,7 +21,7 @@ COPY --from=build /shoelaces/web /shoelaces_default/web
 COPY docker_entrypoint.sh /entrypoint
 RUN chmod +x /entrypoint
 
-#ENV BIND_ADDR=0.0.0.0:8081
+ENV BIND_ADDR 0.0.0.0:80
 ENV PUID 1000
 ENV PGID 100
 EXPOSE 80
@@ -32,6 +32,7 @@ VOLUME [ "/data", "/web" ]
 # CMD []
 
 ENTRYPOINT ["/entrypoint"]
-CMD ["/shoelaces", "-bind-addr", "0.0.0.0:80", "-data-dir", "/data/", "-static-dir", "/web/", "-template-extension", ".slc", "-mappings-file", "mappings.yaml", "-debug", "true"]
+# CMD ["/shoelaces", "-bind-addr", "0.0.0.0:80", "-data-dir", "/data/", "-static-dir", "/web/", "-template-extension", ".slc", "-mappings-file", "mappings.yaml", "-debug", "true"]
+CMD ["/shoelaces", "-data-dir", "/data/", "-static-dir", "/web/", "-template-extension", ".slc", "-mappings-file", "mappings.yaml", "-debug", "true"]
 
 # ENTRYPOINT ["/entrypoint", "/shoelaces", "-data-dir", "/data", "-static-dir", "/web"]
