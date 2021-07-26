@@ -1,21 +1,35 @@
-FROM golang:1.15-alpine AS build
+FROM golang:1.16-alpine AS build
 
 WORKDIR /shoelaces
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-s -w -extldflags "-static"' -o /tmp/shoelaces . && \
-printf "---\nnetworkMaps:\n" > /tmp/mappings.yaml
+    printf "---\nnetworkMaps:\n" > /tmp/mappings.yaml
+
+
 
 # Final container has basically nothing in it but the executable
-FROM scratch
+# FROM scratch
+FROM golang:1.16-alpine
 COPY --from=build /tmp/shoelaces /shoelaces
 
-WORKDIR /data
-COPY --from=build /tmp/mappings.yaml mappings.yaml
-COPY --from=build /shoelaces/web /web
+RUN mkdir -p /shoelaces_default/{data,web} /data /web
+
+COPY --from=build /tmp/mappings.yaml /shoelaces_default/data/mappings.yaml
+COPY --from=build /shoelaces/web /shoelaces_default/web
+
+COPY docker_entrypoint.sh /entrypoint
+RUN chmod +x /entrypoint
 
 ENV BIND_ADDR=0.0.0.0:8081
 EXPOSE 8081
 
-ENTRYPOINT ["/shoelaces", "-data-dir", "/data", "-static-dir", "/web"]
-CMD []
+VOLUME [ "/data", "/web" ]
+
+# ENTRYPOINT ["/shoelaces", "-data-dir", "/data", "-static-dir", "/web"]
+# CMD []
+
+ENTRYPOINT ["/entrypoint"]
+CMD ["/shoelaces", "-data-dir", "/data", "-static-dir", "/web"]
+
+# ENTRYPOINT ["/entrypoint", "/shoelaces", "-data-dir", "/data", "-static-dir", "/web"]
