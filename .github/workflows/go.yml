@@ -1,4 +1,4 @@
-name: Build and Deploy (Go)
+name: Go
 
 on:
   schedule:
