@@ -17,9 +17,9 @@ package router
 import (
 	"net/http"
 
+	"github.com/Didstopia/shoelaces/internal/environment"
+	"github.com/Didstopia/shoelaces/internal/handlers"
 	"github.com/gorilla/mux"
-	"github.com/thousandeyes/shoelaces/internal/environment"
-	"github.com/thousandeyes/shoelaces/internal/handlers"
 )
 
 // ShoelacesRouter sets up all routes and handlers for shoelaces

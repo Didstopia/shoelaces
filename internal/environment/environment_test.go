@@ -17,7 +17,7 @@ package environment
 import (
 	"testing"
 
-	"github.com/thousandeyes/shoelaces/internal/mappings"
+	"github.com/Didstopia/shoelaces/internal/mappings"
 )
 
 func TestDefaultEnvironment(t *testing.T) {

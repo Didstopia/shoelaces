@@ -16,11 +16,12 @@ package handlers
 
 import (
 	"context"
-	"github.com/justinas/alice"
 	"net/http"
 	"regexp"
 
-	"github.com/thousandeyes/shoelaces/internal/environment"
+	"github.com/justinas/alice"
+
+	"github.com/Didstopia/shoelaces/internal/environment"
 )
 
 // ShoelacesCtxID Shoelaces Specific Request Context ID.

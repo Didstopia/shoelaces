@@ -21,11 +21,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Didstopia/shoelaces/internal/log"
+	"github.com/Didstopia/shoelaces/internal/polling"
+	"github.com/Didstopia/shoelaces/internal/server"
+	"github.com/Didstopia/shoelaces/internal/utils"
 	"github.com/gorilla/mux"
-	"github.com/thousandeyes/shoelaces/internal/log"
-	"github.com/thousandeyes/shoelaces/internal/polling"
-	"github.com/thousandeyes/shoelaces/internal/server"
-	"github.com/thousandeyes/shoelaces/internal/utils"
 )
 
 // PollHandler is called by iPXE boot agents. It returns the boot script

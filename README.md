@@ -1,5 +1,7 @@
 # **Shoelaces:** lightweight and painless server bootstrapping
 
+**NOTE:** *This is a fork of the original project, aiming to add more quality of life enhancements, such as hot-reloading of configuration files!*
+
 **Shoelaces** serves [iPXE](https://ipxe.org/) boot scripts,
 [cloud-init](http://cloud-init.org/) configuration, and any other configuration
 files over HTTP to hardware or virtual machines booting over iPXE. It also does
@@ -76,8 +78,8 @@ how to compile Shoelaces.
 Once that you have configured your Go, you can get and compile Shoelaces by
 running:
 
-    $ go get github.com/thousandeyes/shoelaces
-    $ cd $GOPATH/src/github.com/thousandeyes/shoelaces
+    $ go get github.com/Didstopia/shoelaces
+    $ cd $GOPATH/src/github.com/Didstopia/shoelaces
     $ go build
 
 ### Running Shoelaces
@@ -226,7 +228,7 @@ override you won't be able to select it.
 Contributions to Shoelaces are very welcome! Take into account the following
 guidelines:
 
-* [File an issue](https://github.com/thousandeyes/shoelaces/issues) if you find
+* [File an issue](https://github.com/Didstopia/shoelaces/issues) if you find
   a bug or, even better, contribute with a pull request.
 * We have a bunch of integration tests that can be run by executing `make test`.
   Ensure that all test pass before submitting your pull request.

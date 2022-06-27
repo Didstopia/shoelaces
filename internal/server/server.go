@@ -15,10 +15,14 @@
 package server
 
 import (
+	"os"
+	"path"
 	"sync"
 	"time"
 
-	"github.com/thousandeyes/shoelaces/internal/log"
+	"github.com/Didstopia/shoelaces/internal/log"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 const (
@@ -120,4 +124,72 @@ func StartStateCleaner(logger log.Logger, serverStates *States) {
 			serverStates.Unlock()
 		}
 	}()
+}
+
+// TODO: Should this be in its own file instead?
+func WatchStuff(logger log.Logger, dataDir string, mappingsFile string, initMappings func(string) error) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.Error("Failed to create watcher: ", err)
+		os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+	}
+	defer watcher.Close()
+
+	done := make(chan bool)
+
+	go func() {
+		defer close(done)
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+
+				// Log the file change event
+				logger.Debug("component", "watcher", "msg", "File changed", "file", event.Name, "type", event.Op)
+
+				// Check if the change was a write event
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					// Check if the file is the mappings file
+					mappingsPath := path.Join(dataDir, mappingsFile)
+					if event.Name == mappingsPath {
+						// Mappings file changed, so we will attempt to reload all mappings
+						logger.Info("component", "watcher", "msg", "Mappings file changed, recreating mappings")
+						if err := initMappings(mappingsPath); err != nil {
+							logger.Error("component", "watcher", "msg", "Init mappings error:", err)
+							os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+						}
+					}
+				}
+
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				logger.Error("component", "watcher", "msg", "Watcher error:", err)
+				os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+			}
+		}
+	}()
+
+	// FIXME: fsnotify/watcher is NOT recursive, so we need to add every directory and subdirectory we want to watch,
+	//        which includes any newly created directories, but also removing any removed ones!
+
+	// TODO: Do we even need to watch the data directory? Wouldn't watching mappings.yaml be enough?
+	// Watch the data directory
+	// if err := watcher.Add(env.DataDir); err != nil {
+	// 	env.Logger.Error("component", "watcher", "msg", "Failed to watch data directory:", err)
+	// 	os.Exit(1)
+	// }
+
+	// Register the mappings file in the filesystem watcher
+	if err := watcher.Add(path.Join(dataDir, mappingsFile)); err != nil {
+		logger.Error("component", "watcher", "msg", "Failed to watch mappings file:", err)
+		os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+	}
+
+	// FIXME: We need a way to gracefully shut this down, passing in a context or channel for example?
+	logger.Info("component", "watcher", "msg", "Watching for changes...")
+	<-done
 }

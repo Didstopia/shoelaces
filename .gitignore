@@ -10,6 +10,8 @@ _test
 .vscode
 .cache
 __pycache__
+/lib/
+/bin/
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -34,3 +36,5 @@ config.yaml
 docs/shoelaces.8
 
 .docker_data/
+
+.pytest_cache/

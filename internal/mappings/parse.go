@@ -20,7 +20,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/thousandeyes/shoelaces/internal/log"
+	"github.com/Didstopia/shoelaces/internal/log"
 )
 
 // Mappings struct contains YamlNetworkMaps and YamlHostnameMaps.

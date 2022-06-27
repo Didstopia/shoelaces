@@ -18,13 +18,15 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/thousandeyes/shoelaces/internal/environment"
-	"github.com/thousandeyes/shoelaces/internal/handlers"
-	"github.com/thousandeyes/shoelaces/internal/router"
+	"github.com/Didstopia/shoelaces/internal/environment"
+	"github.com/Didstopia/shoelaces/internal/handlers"
+	"github.com/Didstopia/shoelaces/internal/router"
+	// cp "github.com/otiai10/copy"
 )
 
 func main() {
 	env := environment.New()
+	// prepareEnvironment(env)
 	app := handlers.MiddlewareChain(env).Then(router.ShoelacesRouter(env))
 
 	env.Logger.Info("component", "main", "transport", "http", "addr", env.BindAddr, "msg", "listening")
@@ -32,3 +34,61 @@ func main() {
 
 	os.Exit(1)
 }
+
+// FIXME: Abandoned this for now, as this should run BEFORE environment.New(),
+//        as the environment needs to be setup BEFORE this, but this also means
+//        that we don't have immediate access to user-configured parameters, like paths etc.
+
+// Prepares the environment for running Shoelaces
+// (replaces `docker_entrypoint.sh`)
+// func prepareEnvironment(env *environment.Environment) {
+// 	cwd, err := os.Getwd()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// TODO: What if we embed the default mappings.yaml with the binary, then
+// 	//       we can simply write it to the data directory if it's missing?!
+// 	// TODO: If env.DataDir is empty or doesn't exist, copy /shoelaces_default/mappings.yaml to it
+// 	// Check if env.DataDir exists or is empty
+// 	log.Println("Checking if data directory exists or is empty")
+// 	if _, err := os.Stat(env.DataDir); os.IsNotExist(err) {
+// 		// DataDir doesn't exist, create it
+// 		log.Println("Data directory doesn't exist, creating it")
+// 		err := os.MkdirAll(env.DataDir, 0755)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		// Check if mappings.yaml exists in the env.DataDir directory
+// 		log.Println("Checking if mappings.yaml exists in the data directory")
+// 		if _, err := os.Stat(path.Join(env.DataDir, "mappings.yaml")); os.IsNotExist(err) {
+// 			// mappings.yaml doesn't exist, copy it from the default directory
+// 			log.Println("Copying default mappings.yaml to", env.DataDir)
+// 			err := cp.Copy(path.Join(cwd, "configs", "data-dir", "mappings.yaml"), path.Join(env.DataDir, "mappings.yaml"))
+// 			if err != nil {
+// 				log.Fatal(err)
+// 			}
+// 			log.Println("Copied mappings.yaml from", path.Join(cwd, "configs", "data-dir", "mappings.yaml"), "to", path.Join(env.DataDir, "mappings.yaml"))
+// 		}
+// 	}
+
+// 	// TODO: Could we also embed the _entire_ static website with the binary,
+// 	//			 then write it to the static/web directory, just like above?
+// 	// TODO: If env.StaticDir is empty or doesn't exist, copy /shoelaces/default/web/* to it
+// 	// Check if env.StaticDir exists or is empty
+// 	log.Println("Checking if env.StaticDir exists or is empty")
+// 	if _, err := os.Stat(env.StaticDir); os.IsNotExist(err) {
+// 		// Create the directory
+// 		log.Println("Creating directory:", env.StaticDir)
+// 		if err := os.Mkdir(env.StaticDir, 0755); err != nil {
+// 			panic(err)
+// 		}
+// 		log.Println("Created directory", env.StaticDir)
+// 		log.Println("Copying default static contents to", env.StaticDir)
+// 		// FIXME: The "web/" likely won't work here..
+// 		if err := cp.Copy(path.Join(cwd, "web/"), env.StaticDir); err != nil {
+// 			panic(err)
+// 		}
+// 		log.Println("Copied", path.Join(cwd, "web/"), "to", env.StaticDir)
+// 	}
+// }

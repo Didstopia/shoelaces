@@ -1,5 +1,14 @@
 # package log
 
+**Deprecation notice:** The core Go kit log packages (log, log/level, log/term, and
+log/syslog) have been moved to their own repository at github.com/go-kit/log.
+The corresponding packages in this directory remain for backwards compatibility.
+Their types alias the types and their functions call the functions provided by
+the new repository. Using either import path should be equivalent. Prefer the
+new import path when practical.
+
+______
+
 `package log` provides a minimal interface for structured logging in services.
 It may be wrapped to encode conventions, enforce type-safety, provide leveled
 logging, and so on. It can be used for both typical application log events,
@@ -102,6 +111,10 @@ logger.Log("msg", "hello")
 // Output:
 // ts=2016-01-01T12:34:56Z caller=main.go:15 msg=hello
 ```
+
+## Levels
+
+Log levels are supported via the [level package](https://godoc.org/github.com/go-kit/kit/log/level).
 
 ## Supported output formats
 

@@ -22,12 +22,12 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/thousandeyes/shoelaces/internal/event"
-	"github.com/thousandeyes/shoelaces/internal/log"
-	"github.com/thousandeyes/shoelaces/internal/mappings"
-	"github.com/thousandeyes/shoelaces/internal/server"
-	"github.com/thousandeyes/shoelaces/internal/templates"
-	"github.com/thousandeyes/shoelaces/internal/utils"
+	"github.com/Didstopia/shoelaces/internal/event"
+	"github.com/Didstopia/shoelaces/internal/log"
+	"github.com/Didstopia/shoelaces/internal/mappings"
+	"github.com/Didstopia/shoelaces/internal/server"
+	"github.com/Didstopia/shoelaces/internal/templates"
+	"github.com/Didstopia/shoelaces/internal/utils"
 )
 
 // ManualAction represent an action taken when no automatic boot is available.

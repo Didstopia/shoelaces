@@ -25,11 +25,11 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/thousandeyes/shoelaces/internal/event"
-	"github.com/thousandeyes/shoelaces/internal/log"
-	"github.com/thousandeyes/shoelaces/internal/mappings"
-	"github.com/thousandeyes/shoelaces/internal/server"
-	"github.com/thousandeyes/shoelaces/internal/templates"
+	"github.com/Didstopia/shoelaces/internal/event"
+	"github.com/Didstopia/shoelaces/internal/log"
+	"github.com/Didstopia/shoelaces/internal/mappings"
+	"github.com/Didstopia/shoelaces/internal/server"
+	"github.com/Didstopia/shoelaces/internal/templates"
 )
 
 // Environment struct holds the shoelaces instance global data.
@@ -84,6 +84,9 @@ func New() *Environment {
 	env.Templates.ParseTemplates(env.Logger, env.DataDir, env.EnvDir, env.Environments, env.TemplateExtension)
 	server.StartStateCleaner(env.Logger, env.ServerStates)
 
+	// FIXME: Pass in a context so we can cancel the goroutine and gracefully shut it down!
+	go server.WatchStuff(env.Logger, env.DataDir, env.MappingsFile, env.initMappings)
+
 	return env
 }
 
@@ -91,6 +94,7 @@ func defaultEnvironment() *Environment {
 	env := &Environment{}
 	env.NetworkMaps = make([]mappings.NetworkMap, 0)
 	env.HostnameMaps = make([]mappings.HostnameMap, 0)
+	// FIXME: This whatever the issue is with this warning?!
 	env.ServerStates = &server.States{sync.RWMutex{}, make(map[string]*server.State)}
 	env.ParamsBlacklist = []string{"baseURL"}
 	env.Templates = templates.New()
@@ -138,6 +142,9 @@ func (env *Environment) initEnvOverrides() []string {
 func (env *Environment) initMappings(mappingsPath string) error {
 	configMappings := mappings.ParseYamlMappings(env.Logger, mappingsPath)
 
+	// Ensure env.NetworkMaps is empty
+	env.NetworkMaps = make([]mappings.NetworkMap, 0)
+
 	for _, configNetMap := range configMappings.NetworkMaps {
 		_, ipnet, err := net.ParseCIDR(configNetMap.Network)
 		if err != nil {
@@ -147,6 +154,9 @@ func (env *Environment) initMappings(mappingsPath string) error {
 		netMap := mappings.NetworkMap{Network: ipnet, Script: initScript(configNetMap.Script)}
 		env.NetworkMaps = append(env.NetworkMaps, netMap)
 	}
+
+	// Ensure env.HostnameMaps is empty
+	env.HostnameMaps = make([]mappings.HostnameMap, 0)
 
 	for _, configHostMap := range configMappings.HostnameMaps {
 		regex, err := regexp.Compile(configHostMap.Hostname)
