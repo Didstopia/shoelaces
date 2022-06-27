@@ -92,7 +92,7 @@ jobs:
 
       ## TODO: Only release for tagged/versioned releases?
       - name: Release
-        uses: go-semantic-release/action@v1
+        uses: go-semantic-release/action@v1.18.0
         if: ${{ github.event_name != 'pull_request' }}
         ## TODO: Configure appropriately for production vs. pre-release etc.
         with:
