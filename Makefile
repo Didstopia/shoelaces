@@ -37,6 +37,9 @@ test: fmt
 	$(GO) test -v $(pkgs) && \
 	./test/integ-test/integ_test.py
 
+build:
+	$(GO) build -o bin/shoelaces -ldflags ${LDFLAGS}
+
 binaries: deps linux windows macos
 
 linux:
