@@ -12,7 +12,7 @@ jobs:
     if: ${{ github.ref_type == 'tag' }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      # fail-fast: true
       matrix:
         # Build and publish in parallel:
         # linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
@@ -41,11 +41,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          binary_name: shoelaces-${{ env.SHOELACES_BUILD_SHORT }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          # binary_name: shoelaces-${{ env.SHOELACES_BUILD_SHORT }}-${{ matrix.goos }}-${{ matrix.goarch }}
           extra_files: LICENSE README.md CHANGELOG.md
           # build_command: packr2 build
           ldflags: -X main.version=${{ env.SHOELACES_VERSION }} -X main.build=${{ env.SHOELACES_BUILD }}
           # release_tag: ${{ env.SHOELACES_VERSION }}
+          overwrite: true
 
       # # https://github.com/actions/setup-go
       # - name: Setup Go
