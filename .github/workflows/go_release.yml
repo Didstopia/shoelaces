@@ -1,8 +1,8 @@
 name: Go
 
 on:
-  push:
-    tags: [ 'v*.*.*' ]
+  release:
+    types: [created]
 
 jobs:
 
@@ -12,6 +12,7 @@ jobs:
     if: ${{ github.ref_type == 'tag' }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: true
       matrix:
         # Build and publish in parallel:
         # linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
@@ -28,8 +29,8 @@ jobs:
 
       - name: Setup Build Information
         run: |
-          # echo "SHOELACES_VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
-          echo "SHOELACES_VERSION=${{ env.GITHUB_REF_NAME }}" >> $GITHUB_ENV
+          echo "SHOELACES_VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
+          # echo "SHOELACES_VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
           echo "SHOELACES_BUILD=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
           echo "SHOELACES_BUILD_SHORT=$(date -u +%Y%m%d-%H%M)" >> $GITHUB_ENV
 
