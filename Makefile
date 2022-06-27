@@ -1,7 +1,10 @@
 GO = go
 PYTHON = python3
 SCDOC = scdoc
-LDFLAGS = "-s -w"
+TAG_COMMIT = $(shell git rev-list --tags --max-count=1)
+TAG_VERSION = $(shell git describe --tags ${TAG_COMMIT})
+BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+LDFLAGS = "-s -w -X main.version=$(TAG_VERSION) -X main.build=$(BUILD_DATE)"
 
 pkgs = $(shell $(GO) list ./... | grep -v /vendor/)
 

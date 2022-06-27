@@ -1,13 +1,11 @@
 name: Build and Deploy (Docker)
 
 on:
-  # Build and publish the image on a schedule
   schedule:
     - cron: '0 0 * * *'
 
   push:
     branches: [ 'master' ]
-    # Publish semver tags as releases
     tags: [ 'v*.*.*' ]
 
   pull_request:

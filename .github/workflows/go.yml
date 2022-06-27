@@ -1,8 +1,12 @@
 name: Build and Deploy (Go)
 
 on:
+  schedule:
+    - cron: '0 0 * * *'
+
   push:
     branches: [ 'master' ]
+    tags: [ 'v*.*.*' ]
 
   pull_request:
     branches: [ 'master' ]
@@ -16,13 +20,13 @@ jobs:
   ## TODO: Set the appropriate steps to depend on each other
 
   build:
-    name: Build & Test
+    name: Build and Test
     runs-on: ubuntu-latest
     strategy:
       # fail-fast: true
       fail-fast: false
       matrix:
-        go-version: [ '1.18' ]
+        go-version: [ 1.18 ]
         check-latest: [ false ]
         include:
           ## TODO: Does this work for testing against the "latest" version vs. predefined versions?
@@ -33,7 +37,7 @@ jobs:
         uses: actions/checkout@v3
 
       # https://github.com/actions/setup-go
-      - name: Setup Go v${{ matrix.go-version }}
+      - name: Setup Go ${{ matrix.go-version }}
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
@@ -44,13 +48,17 @@ jobs:
       ##       considering we want to release binaries for them anyway?
       ## TODO: Only build for the active architecture?
       - name: Build
-        run: go build -v ./...
         # run: make build
+        run: |
+          go version
+          go build -v ./...
 
       ## TODO: These are still failing, fix the tests!
       - name: Test
         # run: make test
-        run: go test -v ./...
+        run: |
+          go version
+          go test -v ./...
 
   deploy:
     name: Deploy
@@ -77,8 +85,10 @@ jobs:
       ##       considering we want to release binaries for them anyway?
       ## TODO: Only build for the active architecture?
       - name: Build
-        run: go build -v ./...
         # run: make build
+        run: |
+          go version
+          go build -v ./...
 
       ## TODO: Only release for tagged/versioned releases?
       - name: Release

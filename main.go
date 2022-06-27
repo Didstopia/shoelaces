@@ -15,6 +15,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -24,12 +25,25 @@ import (
 	// cp "github.com/otiai10/copy"
 )
 
+// These will be filled in at compile time
+var version = "LATEST"
+var build = "development build"
+
 func main() {
+	// Print the version and build information on startup
+	fmt.Println("Shoelaces " + version + " (" + build + ")")
+
+	// Prepare the environment
 	env := environment.New()
 	// prepareEnvironment(env)
+
+	// Create the application, including the web server, request routers and handlers etc.
 	app := handlers.MiddlewareChain(env).Then(router.ShoelacesRouter(env))
 
-	env.Logger.Info("component", "main", "transport", "http", "addr", env.BindAddr, "msg", "listening")
+	// TODO: Here we would need to control our own context and pass it to everything,
+	//       so that we have full control over the shutdown process and can do it gracefully!
+	// Start the web server and wait for it to exit
+	env.Logger.Info("component", "main", "transport", "http", "addr", env.BindAddr, "msg", "Listening for incoming HTTP requests")
 	env.Logger.Error("component", "main", "err", http.ListenAndServe(env.BindAddr, app))
 
 	os.Exit(1)
