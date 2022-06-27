@@ -1,0 +1,89 @@
+name: Build and Deploy (Go)
+
+on:
+  push:
+    branches: [ 'master' ]
+
+  pull_request:
+    branches: [ 'master' ]
+
+  workflow_dispatch:
+
+jobs:
+
+  ## TODO: Setup matrix jobs for targeting different Go versions
+  ## TODO: Setup separate build steps for Go version, tests and release management
+  ## TODO: Set the appropriate steps to depend on each other
+
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    strategy:
+      # fail-fast: true
+      fail-fast: false
+      matrix:
+        go-version: [ '1.18' ]
+        check-latest: [ false ]
+        include:
+          ## TODO: Does this work for testing against the "latest" version vs. predefined versions?
+          - version: ''
+            check-latest: true
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      # https://github.com/actions/setup-go
+      - name: Setup Go v${{ matrix.go-version }}
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+          check-latest: ${{ matrix.check-latest }}
+          cache: true
+
+      ## TODO: Shouldn't we build for ALL supported architectures,
+      ##       considering we want to release binaries for them anyway?
+      ## TODO: Only build for the active architecture?
+      - name: Build
+        run: go build -v ./...
+        # run: make build
+
+      ## TODO: These are still failing, fix the tests!
+      - name: Test
+        # run: make test
+        run: go test -v ./...
+
+  deploy:
+    name: Deploy
+    # The "build" job needs to complete before this can run
+    needs: build
+    runs-on: ubuntu-latest
+    ## TODO: Setup matrix build jobs for targeting multiple
+    ##       platforms and releasing a build for each of them!
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      # https://github.com/actions/setup-go
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          ## TODO: Should we just always use the latest version of Go?
+          # go-version: 1.18
+          # check-latest: false
+          check-latest: true
+          cache: true
+
+      ## TODO: Shouldn't we build for ALL supported architectures,
+      ##       considering we want to release binaries for them anyway?
+      ## TODO: Only build for the active architecture?
+      - name: Build
+        run: go build -v ./...
+        # run: make build
+
+      ## TODO: Only release for tagged/versioned releases?
+      - name: Release
+        uses: go-semantic-release/action@v1
+        if: ${{ github.event_name != 'pull_request' }}
+        ## TODO: Configure appropriately for production vs. pre-release etc.
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
