@@ -23,6 +23,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/Didstopia/shoelaces/internal/event"
@@ -30,6 +31,7 @@ import (
 	"github.com/Didstopia/shoelaces/internal/mappings"
 	"github.com/Didstopia/shoelaces/internal/server"
 	"github.com/Didstopia/shoelaces/internal/templates"
+	"github.com/fsnotify/fsnotify"
 )
 
 // Environment struct holds the shoelaces instance global data.
@@ -85,7 +87,8 @@ func New() *Environment {
 	server.StartStateCleaner(env.Logger, env.ServerStates)
 
 	// FIXME: Pass in a context so we can cancel the goroutine and gracefully shut it down!
-	go server.WatchStuff(env.Logger, env.DataDir, env.MappingsFile, env.initMappings)
+	// go server.WatchStuff(env, env.Logger, env.DataDir, env.MappingsFile, env.initMappings)
+	go watchStuff(env)
 
 	return env
 }
@@ -182,4 +185,135 @@ func initScript(configScript mappings.YamlScript) *mappings.Script {
 	}
 
 	return mappingScript
+}
+
+var validDataDirs = []string{
+	"cloud-config",
+	"env_overrides",
+	"ipxe",
+	"kickstart",
+	"preseed",
+	"static",
+}
+
+func isValidDataDir(dir string) bool {
+	for _, validDir := range validDataDirs {
+		if strings.Contains(dir, "/"+validDir+"/") {
+			return true
+		}
+	}
+	return false
+}
+
+// FIXME: This only seems to work for mappings.yaml, but NOT for eg. foo.slc etc.
+//
+//	although I THINK this is because it's simply not recursive?
+//
+// TODO: Should this be in its own file instead?
+// func watchStuff(logger log.Logger, dataDir string, mappingsFile string, initMappings func(string) error) {
+func watchStuff(env *Environment) {
+	logger := env.Logger
+	dataDir := env.DataDir
+	mappingsFile := env.MappingsFile
+	// initMappings := env.InitMappings
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.Error("Failed to create watcher: ", err)
+		os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+	}
+	defer watcher.Close()
+
+	done := make(chan bool)
+
+	go func() {
+		defer close(done)
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+
+				// Log the file change event
+				logger.Debug("component", "watcher", "msg", "File changed", "file", event.Name, "type", event.Op)
+
+				// Check if the change was a write event
+				if event.Op&fsnotify.Write == fsnotify.Write {
+
+					// Check if the file is the mappings file
+					mappingsPath := path.Join(dataDir, mappingsFile)
+					if event.Name == mappingsPath {
+						// Mappings file changed, so we will attempt to reload all mappings
+						logger.Info("component", "watcher", "msg", "Mappings file changed, recreating mappings")
+						if err := env.initMappings(mappingsPath); err != nil {
+							logger.Error("component", "watcher", "msg", "Init mappings error:", err)
+							os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+						}
+						// Otherwise we check for the data directories and rebuild the templates if they change
+					} else if isValidDataDir(event.Name) {
+						// TODO: We probably need to reload more than just the ".slc" templates, eg. re-initializing env_overrides etc. ?
+						logger.Info("component", "watcher", "msg", "Data directory changed, rebuilding templates")
+						// TODO: Reload templates
+						env.Templates.ParseTemplates(env.Logger, env.DataDir, env.EnvDir, env.Environments, env.TemplateExtension)
+					} else {
+						logger.Info("component", "watcher", "msg", "Unknown change detected:", event.Name)
+					}
+				}
+
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				logger.Error("component", "watcher", "msg", "Watcher error:", err)
+				os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+			}
+		}
+	}()
+
+	// FIXME: fsnotify/watcher is NOT recursive, so we need to add every directory and subdirectory we want to watch,
+	//        which includes any newly created directories, but also removing any removed ones!
+
+	// TODO: Do we even need to watch the data directory? Wouldn't watching mappings.yaml be enough?
+	// Watch the data directory
+	// if err := watcher.Add(env.DataDir); err != nil {
+	// 	env.Logger.Error("component", "watcher", "msg", "Failed to watch data directory:", err)
+	// 	os.Exit(1)
+	// }
+
+	// Register the mappings file in the filesystem watcher
+	if err := watcher.Add(path.Join(dataDir, mappingsFile)); err != nil {
+		logger.Error("component", "watcher", "msg", "Failed to watch mappings file:", err)
+		os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+	}
+
+	// Register the cloud-config directory in the filesystem watcher
+	if err := watcher.Add(path.Join(dataDir, "cloud-config")); err != nil {
+		logger.Error("component", "watcher", "msg", "Failed to watch cloud-config directory:", err)
+		os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+	}
+
+	// Register the env_overrides directory in the filesystem watcher
+	if err := watcher.Add(path.Join(dataDir, "env_overrides")); err != nil {
+		logger.Error("component", "watcher", "msg", "Failed to watch env_overrides directory:", err)
+		os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+	}
+
+	// Register the ipxe directory in the filesystem watcher
+	if err := watcher.Add(path.Join(dataDir, "ipxe")); err != nil {
+		logger.Error("component", "watcher", "msg", "Failed to watch ipxe directory:", err)
+		os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+	}
+
+	// Register the preseed directory in the filesystem watcher
+	if err := watcher.Add(path.Join(dataDir, "preseed")); err != nil {
+		logger.Error("component", "watcher", "msg", "Failed to watch preseed directory:", err)
+		os.Exit(1) // TODO: This probably doesn't allow us to do graceful shutdown?
+	}
+
+	// TODO: No need to watch for the static directory, right?
+
+	// FIXME: We need a way to gracefully shut this down, passing in a context or channel for example?
+	logger.Info("component", "watcher", "msg", "Watching for changes...")
+	<-done
 }

@@ -21,7 +21,7 @@ clean:
 
 deps:
 	$(GO) build -v $(EXTRA_FLAGS) ./...
-	$(PYTHON) -m pip install --user pytest python-dateutil
+	$(PYTHON) -m pip install --user pytest python-dateutil requests
 
 upgrade: deps
 	go get -u ./...

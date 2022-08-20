@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine AS build
+FROM golang:1.19-alpine AS build
 
 WORKDIR /shoelaces
 COPY . .
@@ -19,12 +19,13 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-s -w -extldflags "-static"' 
 
 # Final container has basically nothing in it but the executable
 # FROM scratch
-FROM golang:1.18-alpine
+FROM golang:1.19-alpine
 COPY --from=build /tmp/shoelaces /shoelaces
 
-RUN mkdir -p /shoelaces_default/{data,web} /data /web
+# RUN mkdir -p /shoelaces_default/{data,web} /data /web
 
 COPY --from=build /tmp/mappings.yaml /shoelaces_default/data/mappings.yaml
+COPY --from=build /shoelaces/configs/data-dir /shoelaces_default/data
 COPY --from=build /shoelaces/web /shoelaces_default/web
 
 COPY docker_entrypoint.sh /entrypoint
